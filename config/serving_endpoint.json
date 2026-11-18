@@ -1,0 +1,14 @@
+{
+  "name": "modelo_pronostico_capacidad",
+  "config": {
+    "served_entities": [
+      {
+        "entity_name": "<CATALOG>.pemex_alm_ml.modelo_pronostico_capacidad",
+        "entity_version": "<MODEL_VERSION>",
+        "workload_type": "CPU",
+        "workload_size": "Small",
+        "scale_to_zero_enabled": true
+      }
+    ]
+  }
+}

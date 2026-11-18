@@ -1,0 +1,23 @@
+# 1) el SP crea el esquema de Lakebase; 2) smoke test opcional en segundo plano; 3) UI
+command:
+  - sh
+  - -c
+  - "python init_app.py; python init_app.py --smoke & exec streamlit run app.py"
+
+env:
+  - name: GENIE_SPACE_ID
+    valueFrom: genie-space
+  - name: SERVING_ENDPOINT
+    valueFrom: serving-endpoint
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: LAKEBASE_ENDPOINT
+    valueFrom: database
+  - name: PEMEX_CATALOG  # parámetro: catálogo con pemex_alm_gold y pemex_alm_ml
+    value: "<CATALOG>"
+  - name: CHAT_SCHEMA
+    value: pemex_chat
+  - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+    value: "false"
+  - name: RUN_SMOKE_TEST  # "true" para validar Genie + modelo + Lakebase como el SP al arrancar
+    value: "false"

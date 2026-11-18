@@ -1,0 +1,43 @@
+{
+  "name": "PEMEX Almacenamiento - Ingesta diaria y Medallion",
+  "description": "Tarea 1: genera telemetría sintética incremental (catch-up desde la última fecha en Bronze). Tarea 2: refresh del pipeline SDP Bronze->Silver->Gold. Tarea 3: reentrena el modelo y regenera pronóstico y alertas. Tarea 4: apunta el endpoint a la versión champion.",
+  "email_notifications": {"on_failure": ["<USER_EMAIL>"]},
+  "timeout_seconds": 7200,
+  "schedule": {"quartz_cron_expression": "0 0 6 * * ?", "timezone_id": "America/Mexico_City", "pause_status": "UNPAUSED"},
+  "max_concurrent_runs": 1,
+  "queue": {"enabled": true},
+  "tags": {"capa": "medallion", "proyecto": "pemex_almacenamiento"},
+  "tasks": [
+    {
+      "task_key": "generar_datos_incremental",
+      "description": "Genera lecturas diarias faltantes en landing/telemetria_inventario",
+      "notebook_task": {
+        "notebook_path": "<REPO_PATH>/01_datos_sinteticos/01_generador_datos_sinteticos_almacenamiento",
+        "base_parameters": {"modo": "incremental", "fecha_inicio": "", "fecha_fin": ""},
+        "source": "WORKSPACE"
+      },
+      "max_retries": 1, "min_retry_interval_millis": 60000, "timeout_seconds": 1800
+    },
+    {
+      "task_key": "refresh_pipeline_medallion",
+      "description": "Refresh del pipeline SDP (no full refresh)",
+      "depends_on": [{"task_key": "generar_datos_incremental"}],
+      "pipeline_task": {"pipeline_id": "<PIPELINE_ID>", "full_refresh": false},
+      "max_retries": 1, "min_retry_interval_millis": 120000, "timeout_seconds": 3600
+    },
+    {
+      "task_key": "reentrenar_y_pronosticar",
+      "description": "Reentrena, valida en entorno aislado, registra nueva versión (alias champion) y regenera pronostico_capacidad_diario y alertas_capacidad",
+      "depends_on": [{"task_key": "refresh_pipeline_medallion"}],
+      "notebook_task": {"notebook_path": "<REPO_PATH>/03_ml/02_modelo_pronostico_capacidad", "source": "WORKSPACE"},
+      "max_retries": 1, "min_retry_interval_millis": 120000, "timeout_seconds": 3600
+    },
+    {
+      "task_key": "actualizar_endpoint",
+      "description": "Apunta el endpoint modelo_pronostico_capacidad a la versión champion y hace smoke test contra la tabla",
+      "depends_on": [{"task_key": "reentrenar_y_pronosticar"}],
+      "notebook_task": {"notebook_path": "<REPO_PATH>/03_ml/03_actualizar_endpoint_pronostico", "source": "WORKSPACE"},
+      "max_retries": 1, "min_retry_interval_millis": 120000, "timeout_seconds": 2400
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "PEMEX Almacenamiento - Medallion",
+  "catalog": "<CATALOG>",
+  "schema": "default",
+  "serverless": true,
+  "continuous": false,
+  "development": false,
+  "photon": true,
+  "channel": "CURRENT",
+  "root_path": "<REPO_PATH>/02_pipeline_medallion",
+  "libraries": [{"glob": {"include": "<REPO_PATH>/02_pipeline_medallion/transformations/**"}}]
+}

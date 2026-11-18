@@ -1,0 +1,1764 @@
+{
+  "datasets": [
+    {
+      "name": "mensual",
+      "displayName": "Resumen mensual región-producto",
+      "config": {
+        "version": "1.1",
+        "source": "<CATALOG>.pemex_alm_gold.resumen_mensual_region_producto",
+        "dimensions": [
+          {
+            "expr": "mes"
+          },
+          {
+            "expr": "region"
+          },
+          {
+            "expr": "tipo_instalacion"
+          },
+          {
+            "expr": "nombre_producto"
+          },
+          {
+            "expr": "categoria_producto"
+          }
+        ],
+        "measures": [
+          {
+            "name": "capacidad_operativa_prom_bbl",
+            "expr": "SUM(capacidad_operativa_prom_bbl)"
+          },
+          {
+            "name": "volumen_operativo_prom_bbl",
+            "expr": "SUM(volumen_operativo_prom_bbl)"
+          },
+          {
+            "name": "pct_llenado",
+            "expr": "SUM(volumen_operativo_prom_bbl) * 100.0 / NULLIF(SUM(capacidad_operativa_prom_bbl), 0)"
+          },
+          {
+            "name": "pct_llenado_prom",
+            "expr": "AVG(pct_llenado_prom)"
+          },
+          {
+            "name": "recibos_total_bbl",
+            "expr": "SUM(recibos_total_bbl)"
+          },
+          {
+            "name": "despachos_total_bbl",
+            "expr": "SUM(despachos_total_bbl)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "estado_actual",
+      "displayName": "Estado actual por instalación y producto",
+      "config": {
+        "version": "1.1",
+        "source": "<CATALOG>.pemex_alm_gold.snapshot_instalacion_actual",
+        "dimensions": [
+          {
+            "expr": "fecha_corte"
+          },
+          {
+            "expr": "region"
+          },
+          {
+            "expr": "estado"
+          },
+          {
+            "expr": "tipo_instalacion"
+          },
+          {
+            "expr": "nombre_instalacion"
+          },
+          {
+            "expr": "nombre_producto"
+          },
+          {
+            "expr": "categoria_producto"
+          },
+          {
+            "expr": "semaforo_llenado"
+          },
+          {
+            "name": "pct_llenado_fila",
+            "expr": "pct_llenado"
+          },
+          {
+            "expr": "dias_autonomia_7d"
+          }
+        ],
+        "measures": [
+          {
+            "name": "capacidad_operativa_bbl",
+            "expr": "SUM(capacidad_operativa_bbl)"
+          },
+          {
+            "name": "volumen_operativo_bbl",
+            "expr": "SUM(volumen_operativo_bbl)"
+          },
+          {
+            "name": "capacidad_disponible_bbl",
+            "expr": "SUM(capacidad_disponible_bbl)"
+          },
+          {
+            "name": "pct_llenado",
+            "expr": "SUM(volumen_operativo_bbl) * 100.0 / NULLIF(SUM(capacidad_operativa_bbl), 0)"
+          },
+          {
+            "name": "instalaciones",
+            "expr": "COUNT(DISTINCT id_instalacion)"
+          },
+          {
+            "name": "series",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "tanques_en_mantenimiento",
+            "expr": "SUM(tanques_en_mantenimiento)"
+          },
+          {
+            "name": "pct_llenado_prom",
+            "expr": "AVG(pct_llenado)"
+          },
+          {
+            "name": "instalaciones_sobre_90",
+            "expr": "COUNT(DISTINCT id_instalacion) FILTER (WHERE pct_llenado > 90)"
+          },
+          {
+            "name": "dias_autonomia_30d_prom",
+            "expr": "AVG(dias_autonomia_30d)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pronostico",
+      "displayName": "Pronóstico diario de llenado",
+      "config": {
+        "version": "1.1",
+        "source": "<CATALOG>.pemex_alm_ml.pronostico_capacidad_diario",
+        "dimensions": [
+          {
+            "expr": "fecha"
+          },
+          {
+            "expr": "region"
+          },
+          {
+            "expr": "tipo_instalacion"
+          },
+          {
+            "expr": "nombre_instalacion"
+          },
+          {
+            "expr": "nombre_producto"
+          },
+          {
+            "expr": "categoria_producto"
+          }
+        ],
+        "measures": [
+          {
+            "name": "pct_llenado_p10",
+            "expr": "SUM(pct_llenado_p10 * capacidad_operativa_bbl) / NULLIF(SUM(capacidad_operativa_bbl), 0)"
+          },
+          {
+            "name": "pct_llenado_p50",
+            "expr": "SUM(pct_llenado_p50 * capacidad_operativa_bbl) / NULLIF(SUM(capacidad_operativa_bbl), 0)"
+          },
+          {
+            "name": "pct_llenado_p90",
+            "expr": "SUM(pct_llenado_p90 * capacidad_operativa_bbl) / NULLIF(SUM(capacidad_operativa_bbl), 0)"
+          },
+          {
+            "name": "capacidad_disponible_p50_bbl",
+            "expr": "SUM(capacidad_disponible_p50_bbl)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "alertas",
+      "displayName": "Alertas de capacidad (pronóstico 30d)",
+      "config": {
+        "version": "1.1",
+        "source": "<CATALOG>.pemex_alm_ml.alertas_capacidad",
+        "dimensions": [
+          {
+            "expr": "fecha_corte"
+          },
+          {
+            "expr": "region"
+          },
+          {
+            "expr": "tipo_instalacion"
+          },
+          {
+            "expr": "nombre_instalacion"
+          },
+          {
+            "expr": "nombre_producto"
+          },
+          {
+            "expr": "categoria_producto"
+          },
+          {
+            "expr": "nivel_alerta"
+          },
+          {
+            "expr": "pct_llenado_actual"
+          },
+          {
+            "expr": "pct_llenado_min_pronostico"
+          },
+          {
+            "expr": "pct_llenado_max_pronostico"
+          },
+          {
+            "expr": "fecha_primera_saturacion"
+          },
+          {
+            "expr": "fecha_primer_desabasto"
+          },
+          {
+            "expr": "capacidad_disponible_min_bbl"
+          }
+        ],
+        "measures": [
+          {
+            "name": "series",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "series_saturacion",
+            "expr": "COUNT(1) FILTER (WHERE fecha_primera_saturacion IS NOT NULL)"
+          },
+          {
+            "name": "series_desabasto",
+            "expr": "COUNT(1) FILTER (WHERE fecha_primer_desabasto IS NOT NULL)"
+          }
+        ]
+      }
+    }
+  ],
+  "pages": [
+    {
+      "name": "cca38432",
+      "displayName": "Estado Actual",
+      "layout": [
+        {
+          "widget": {
+            "name": "titulo",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Estado actual del almacenamiento PEMEX\n",
+                    "Último corte de telemetría por instalación y producto."
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_region",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_region",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "region_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Región"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "region",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_region"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_tipo",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_tipo_instalacion",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "tipo_instalacion",
+                      "expression": "`tipo_instalacion`"
+                    },
+                    {
+                      "name": "tipo_instalacion_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Tipo de instalación"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "tipo_instalacion",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_tipo_instalacion"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_cat",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_categoria_producto",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "categoria_producto",
+                      "expression": "`categoria_producto`"
+                    },
+                    {
+                      "name": "categoria_producto_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Categoría de producto"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "categoria_producto",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066721d40a9b906e55f4b3a48_categoria_producto"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "k_pct",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "measure(pct_llenado)",
+                      "expression": "MEASURE(`pct_llenado`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "% llenado operativo"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(pct_llenado)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_vol",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "measure(volumen_operativo_bbl)",
+                      "expression": "MEASURE(`volumen_operativo_bbl`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Volumen operativo (bbl)"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(volumen_operativo_bbl)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_disp",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "measure(capacidad_disponible_bbl)",
+                      "expression": "MEASURE(`capacidad_disponible_bbl`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Capacidad disponible (bbl)"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(capacidad_disponible_bbl)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_mant",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "measure(instalaciones_sobre_90)",
+                      "expression": "MEASURE(`instalaciones_sobre_90`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Instalaciones con llenado > 90%"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(instalaciones_sobre_90)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "b_region",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "measure(pct_llenado_prom)",
+                      "expression": "MEASURE(`pct_llenado_prom`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "% llenado promedio por región"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "region",
+                  "displayName": "Región",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(pct_llenado_prom)",
+                  "displayName": "% llenado promedio",
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "min": 0,
+                      "max": 100
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "b_prod",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "nombre_producto",
+                      "expression": "`nombre_producto`"
+                    },
+                    {
+                      "name": "measure(volumen_operativo_bbl)",
+                      "expression": "MEASURE(`volumen_operativo_bbl`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Volumen vs capacidad disponible por producto"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "nombre_producto",
+                  "displayName": "nombre_producto",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(volumen_operativo_bbl)",
+                  "displayName": "volumen_operativo_bbl",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "nombre_producto",
+                  "displayName": "nombre_producto",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 4,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "p_sem",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "measure(series)",
+                      "expression": "MEASURE(`series`)"
+                    },
+                    {
+                      "name": "semaforo_llenado",
+                      "expression": "`semaforo_llenado`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Series por semáforo de llenado"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(series)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "series"
+                },
+                "color": {
+                  "fieldName": "semaforo_llenado",
+                  "displayName": "semaforo_llenado",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "t_det",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "estado_actual",
+                  "fields": [
+                    {
+                      "name": "nombre_instalacion",
+                      "expression": "`nombre_instalacion`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "nombre_producto",
+                      "expression": "`nombre_producto`"
+                    },
+                    {
+                      "name": "pct_llenado_fila",
+                      "expression": "`pct_llenado_fila`"
+                    },
+                    {
+                      "name": "semaforo_llenado",
+                      "expression": "`semaforo_llenado`"
+                    },
+                    {
+                      "name": "dias_autonomia_7d",
+                      "expression": "`dias_autonomia_7d`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "`pct_llenado_fila`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Instalaciones por % llenado"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "nombre_instalacion",
+                    "displayName": "Instalación"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región"
+                  },
+                  {
+                    "fieldName": "nombre_producto",
+                    "displayName": "Producto"
+                  },
+                  {
+                    "fieldName": "pct_llenado_fila",
+                    "displayName": "% llenado"
+                  },
+                  {
+                    "fieldName": "semaforo_llenado",
+                    "displayName": "Semáforo"
+                  },
+                  {
+                    "fieldName": "dias_autonomia_7d",
+                    "displayName": "Días autonomía (7d)"
+                  }
+                ],
+                "rowOrder": [
+                  {
+                    "by": "column-reversed",
+                    "field": {
+                      "index": 3
+                    }
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 10,
+            "width": 8,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "alertas_pronostico",
+      "displayName": "Alertas y Pronóstico",
+      "layout": [
+        {
+          "widget": {
+            "name": "titulo",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Alertas y pronóstico a 30 días\n",
+                    "Riesgo de saturación (>90%) o desabasto (<15%) según el modelo de pronóstico."
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "k_series",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "alertas",
+                  "fields": [
+                    {
+                      "name": "measure(series)",
+                      "expression": "MEASURE(`series`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Series evaluadas"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(series)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_sat",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "alertas",
+                  "fields": [
+                    {
+                      "name": "measure(series_saturacion)",
+                      "expression": "MEASURE(`series_saturacion`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Series con riesgo de saturación"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(series_saturacion)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_des",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "alertas",
+                  "fields": [
+                    {
+                      "name": "measure(series_desabasto)",
+                      "expression": "MEASURE(`series_desabasto`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Series con riesgo de desabasto"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(series_desabasto)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "b_nivel",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "alertas",
+                  "fields": [
+                    {
+                      "name": "nivel_alerta",
+                      "expression": "`nivel_alerta`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "measure(series)",
+                      "expression": "MEASURE(`series`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Series por nivel de alerta y región"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "region",
+                  "displayName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(series)",
+                  "displayName": "series",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "nivel_alerta",
+                  "displayName": "nivel_alerta",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "l_pron",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "pronostico",
+                  "fields": [
+                    {
+                      "name": "fecha",
+                      "expression": "`fecha`"
+                    },
+                    {
+                      "name": "measure(pct_llenado_p10)",
+                      "expression": "MEASURE(`pct_llenado_p10`)"
+                    },
+                    {
+                      "name": "measure(pct_llenado_p50)",
+                      "expression": "MEASURE(`pct_llenado_p50`)"
+                    },
+                    {
+                      "name": "measure(pct_llenado_p90)",
+                      "expression": "MEASURE(`pct_llenado_p90`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Pronóstico de % llenado (p10 / p50 / p90)"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "fecha",
+                  "displayName": "Fecha",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "measure(pct_llenado_p10)",
+                      "displayName": "p10"
+                    },
+                    {
+                      "fieldName": "measure(pct_llenado_p50)",
+                      "displayName": "p50"
+                    },
+                    {
+                      "fieldName": "measure(pct_llenado_p90)",
+                      "displayName": "p90"
+                    }
+                  ]
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 3,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "t_alertas",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "alertas",
+                  "fields": [
+                    {
+                      "name": "nivel_alerta",
+                      "expression": "`nivel_alerta`"
+                    },
+                    {
+                      "name": "nombre_instalacion",
+                      "expression": "`nombre_instalacion`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "nombre_producto",
+                      "expression": "`nombre_producto`"
+                    },
+                    {
+                      "name": "pct_llenado_actual",
+                      "expression": "`pct_llenado_actual`"
+                    },
+                    {
+                      "name": "pct_llenado_min_pronostico",
+                      "expression": "`pct_llenado_min_pronostico`"
+                    },
+                    {
+                      "name": "pct_llenado_max_pronostico",
+                      "expression": "`pct_llenado_max_pronostico`"
+                    },
+                    {
+                      "name": "fecha_primera_saturacion",
+                      "expression": "`fecha_primera_saturacion`"
+                    },
+                    {
+                      "name": "fecha_primer_desabasto",
+                      "expression": "`fecha_primer_desabasto`"
+                    },
+                    {
+                      "name": "capacidad_disponible_min_bbl",
+                      "expression": "`capacidad_disponible_min_bbl`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`nivel_alerta` NOT IN ('NORMAL')"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Alertas activas (≠ NORMAL)"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "nivel_alerta"
+                  },
+                  {
+                    "fieldName": "nombre_instalacion"
+                  },
+                  {
+                    "fieldName": "region"
+                  },
+                  {
+                    "fieldName": "nombre_producto"
+                  },
+                  {
+                    "fieldName": "pct_llenado_actual"
+                  },
+                  {
+                    "fieldName": "pct_llenado_min_pronostico"
+                  },
+                  {
+                    "fieldName": "pct_llenado_max_pronostico"
+                  },
+                  {
+                    "fieldName": "fecha_primera_saturacion"
+                  },
+                  {
+                    "fieldName": "fecha_primer_desabasto"
+                  },
+                  {
+                    "fieldName": "capacidad_disponible_min_bbl"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "f_inst",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def0669415248696c71f38bd2b5c_nombre_instalacion",
+                "query": {
+                  "datasetName": "pronostico",
+                  "fields": [
+                    {
+                      "name": "nombre_instalacion",
+                      "expression": "`nombre_instalacion`"
+                    },
+                    {
+                      "name": "nombre_instalacion_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Instalación"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "nombre_instalacion",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def0669415248696c71f38bd2b5c_nombre_instalacion"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_prod",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def0669415248696c71f38bd2b5c_nombre_producto",
+                "query": {
+                  "datasetName": "pronostico",
+                  "fields": [
+                    {
+                      "name": "nombre_producto",
+                      "expression": "`nombre_producto`"
+                    },
+                    {
+                      "name": "nombre_producto_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Producto"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "nombre_producto",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def0669415248696c71f38bd2b5c_nombre_producto"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "tendencia_mensual",
+      "displayName": "Tendencia Mensual",
+      "layout": [
+        {
+          "widget": {
+            "name": "titulo",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Tendencia mensual\n",
+                    "Evolución de llenado, recibos y despachos por región y producto."
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_fecha",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_mes",
+                "query": {
+                  "datasetName": "mensual",
+                  "fields": [
+                    {
+                      "name": "mes",
+                      "expression": "`mes`"
+                    },
+                    {
+                      "name": "mes_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Periodo"
+              },
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "mes",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_mes"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_region",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_region",
+                "query": {
+                  "datasetName": "mensual",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "region_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Región"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "region",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_region"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "f_prod",
+            "queries": [
+              {
+                "name": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_nombre_producto",
+                "query": {
+                  "datasetName": "mensual",
+                  "fields": [
+                    {
+                      "name": "nombre_producto",
+                      "expression": "`nombre_producto`"
+                    },
+                    {
+                      "name": "nombre_producto_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Producto"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "nombre_producto",
+                    "queryName": "dashboards/01f1def02c0017b7bc85260d38331f51/datasets/01f1def066501155bace99c1d5e60bf4_nombre_producto"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "l_pct",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mensual",
+                  "fields": [
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    },
+                    {
+                      "name": "measure(pct_llenado_prom)",
+                      "expression": "MEASURE(`pct_llenado_prom`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "% llenado promedio mensual"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(mes)",
+                  "displayName": "Mes",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(pct_llenado_prom)",
+                  "displayName": "% llenado promedio",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "b_rec",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "mensual",
+                  "fields": [
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    },
+                    {
+                      "name": "measure(recibos_total_bbl)",
+                      "expression": "MEASURE(`recibos_total_bbl`)"
+                    },
+                    {
+                      "name": "measure(despachos_total_bbl)",
+                      "expression": "MEASURE(`despachos_total_bbl`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Recibos y despachos mensuales (bbl)"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(mes)",
+                  "displayName": "Mes",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "measure(recibos_total_bbl)",
+                      "displayName": "Recibos (bbl)"
+                    },
+                    {
+                      "fieldName": "measure(despachos_total_bbl)",
+                      "displayName": "Despachos (bbl)"
+                    }
+                  ]
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F2EFEA",
+        "dark": "#1A1416"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FCFCFD",
+        "dark": "#241C1F"
+      },
+      "widgetBorderColor": {
+        "light": "#FCFCFD",
+        "dark": "#241C1F"
+      },
+      "selectionColor": {
+        "light": "#691C32",
+        "dark": "#BC955C"
+      },
+      "visualizationColors": [
+        "#691C32",
+        "#BC955C",
+        "#235B4E",
+        "#6F7271",
+        "#9D2449",
+        "#DDC9A3",
+        "#10312B",
+        "#A57F2C"
+      ],
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED",
+      "widgetCornerRadius": 8,
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Montserrat",
+          "fontColor": {
+            "light": "#2B1A20",
+            "dark": "#EBE6E0"
+          }
+        },
+        "widgetTitle": {
+          "fontColor": {
+            "light": "#691C32",
+            "dark": "#DDC9A3"
+          },
+          "fontWeight": 600
+        }
+      },
+      "visualizationColorMappings": [
+        {
+          "value": "SATURACION",
+          "color": "#9D2449"
+        },
+        {
+          "value": "RIESGO_SATURACION",
+          "color": "#BC955C"
+        },
+        {
+          "value": "ALTO",
+          "color": "#9D2449"
+        },
+        {
+          "value": "NORMAL",
+          "color": "#235B4E"
+        },
+        {
+          "value": "p50",
+          "color": "#691C32"
+        },
+        {
+          "value": "p10",
+          "color": "#BC955C"
+        },
+        {
+          "value": "p90",
+          "color": "#6F7271"
+        },
+        {
+          "value": "Recibos (bbl)",
+          "color": "#235B4E"
+        },
+        {
+          "value": "Despachos (bbl)",
+          "color": "#691C32"
+        }
+      ]
+    },
+    "applyModeEnabled": false
+  }
+}
