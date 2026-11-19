@@ -45,6 +45,14 @@ Lakebase (historial de conversaciones)
 * Registro en Unity Catalog con alias `champion`; firma pyfunc: entrada `serie_id`, `fecha`, `frac_capacidad_operativa`; salida `pct_llenado_p10/p50/p90`.
 * El notebook `03_actualizar_endpoint_pronostico` mueve el endpoint a la versión `champion` y valida que coincida con la tabla de pronóstico.
 
+## 3b. Plan de acción por alerta (IA generativa)
+
+* Notebook `03_ml/04_plan_accion_alertas`, tarea 5 del Job (después de reentrenar y pronosticar).
+* Por cada alerta vigente arma un contexto con la alerta, el estado actual, el pronóstico p10/p50/p90 en días clave y hasta 3 instalaciones de la misma región y producto con capacidad libre.
+* `ai_query` (modelo de `system.ai`, salida estructurada, temperatura 0) redacta acción, justificación, alternativa, volumen, fecha límite y riesgo si no se actúa.
+* Validaciones en código: la alternativa debe estar en el contexto, el volumen no puede exceder su capacidad libre y la prioridad se fija por regla (SATURACION = ALTA, RIESGO_SATURACION = MEDIA), no por el LLM.
+* Destino `pemex_alm_ml.plan_accion_alertas`, idempotente por `fecha_corte` (`replaceWhere`); guarda el contexto exacto enviado al LLM para trazabilidad. Si todas las llamadas fallan, la tarea falla y no escribe.
+
 ## 4. App de chat
 
 * `router.py`: reglas deterministas. Escenarios ("qué pasa si", "simula", cambios de capacidad) y pronósticos de una serie concreta van al modelo; todo lo demás a Genie (incluye rankings de alertas).
@@ -52,12 +60,14 @@ Lakebase (historial de conversaciones)
 * `genie_client.py`: Genie Conversation API; mantiene el `conversation_id` por conversación para preguntas de seguimiento.
 * `storage.py` + `init_app.py`: el service principal crea el esquema `pemex_chat` al arrancar (queda como dueño); pool de conexiones con token OAuth renovado por conexión.
 * Las preguntas de seguimiento sin instalación reutilizan la última serie de la conversación.
+* `plan_accion.py` + pestaña "Plan de acción": lee `plan_accion_alertas` por el SQL warehouse y permite APROBADA, MODIFICADA o RECHAZADA (rechazar exige comentario). Cada decisión se guarda en Lakebase; la última por serie es la vigente.
 
 ### Tablas en Lakebase (`pemex_chat`)
 
 * `conversaciones`: `conversacion_id`, `usuario`, `titulo`, `genie_conversation_id`, `creado_en`, `actualizado_en`.
 * `mensajes`: `mensaje_id`, `conversacion_id`, `rol`, `contenido`, `ruta` (genie/modelo), `genie_conversation_id`, `genie_message_id`, `sql_generado`, `parametros_escenario` (JSONB), `resultado` (JSONB), `latencia_ms`, `error`, `creado_en`.
+* `decisiones`: `decision_id`, `fecha_corte`, `serie_id`, `decision`, `accion_recomendada`, `accion_final`, `instalacion_alternativa`, `volumen_sugerido_bbl`, `comentario`, `usuario`, `creado_en`.
 
 ## 5. Orquestación
 
-Job diario (06:00 America/Mexico_City): generar datos -> refresh del pipeline -> reentrenar y pronosticar -> actualizar endpoint. Cada tarea tiene 1 reintento y depende del éxito de la anterior.
+Job diario (06:00 America/Mexico_City): generar datos -> refresh del pipeline -> reentrenar y pronosticar -> (actualizar endpoint | plan de acción por alerta). Cada tarea tiene 1 reintento y depende del éxito de la anterior.

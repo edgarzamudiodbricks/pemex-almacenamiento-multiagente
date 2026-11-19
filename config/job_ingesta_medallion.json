@@ -38,6 +38,13 @@
       "depends_on": [{"task_key": "reentrenar_y_pronosticar"}],
       "notebook_task": {"notebook_path": "<REPO_PATH>/03_ml/03_actualizar_endpoint_pronostico", "source": "WORKSPACE"},
       "max_retries": 1, "min_retry_interval_millis": 120000, "timeout_seconds": 2400
+    },
+    {
+      "task_key": "plan_accion_alertas",
+      "description": "Redacta con IA generativa (ai_query) una acción logística por alerta vigente, la valida en código y escribe pemex_alm_ml.plan_accion_alertas",
+      "depends_on": [{"task_key": "reentrenar_y_pronosticar"}],
+      "notebook_task": {"notebook_path": "<REPO_PATH>/03_ml/04_plan_accion_alertas", "source": "WORKSPACE"},
+      "max_retries": 1, "min_retry_interval_millis": 120000, "timeout_seconds": 1800
     }
   ]
 }

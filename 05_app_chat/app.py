@@ -10,6 +10,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.core import Config
 
 import escenario
+import plan_accion
 import servicio
 from storage import ChatStore
 
@@ -41,6 +42,11 @@ def almacen() -> ChatStore:
 @st.cache_data(ttl=3600, show_spinner="Cargando catálogo de series…")
 def catalogo() -> pd.DataFrame:
     return escenario.cargar_catalogo(cliente())
+
+
+@st.cache_data(ttl=300, show_spinner="Cargando plan de acción…")
+def plan() -> pd.DataFrame:
+    return plan_accion.cargar_plan(cliente())
 
 
 def usuario_actual() -> str:
@@ -91,6 +97,69 @@ def render_mensaje(m: dict, clave: str) -> None:
                 st.dataframe(detalle, width="stretch", hide_index=True)
 
 
+# ---------------------------------------------------------------- vista: plan de acción
+DECISIONES = ["APROBADA", "MODIFICADA", "RECHAZADA"]
+
+
+def tarjeta_recomendacion(store: ChatStore, r: pd.Series, vigente: Optional[dict], usuario: str) -> None:
+    with st.container(border=True):
+        estado = f"{vigente['decision']} por {vigente['usuario']}" if vigente else "PENDIENTE"
+        st.markdown(f"**[{r.prioridad}] {r.nombre_instalacion} – {r.nombre_producto}** (`{r.serie_id}`)  \n"
+                    f"Alerta: {r.nivel_alerta} · Fecha límite: {r.fecha_limite_accion} · Estado: **{estado}**")
+        if r.instalacion_alternativa and r.instalacion_alternativa != "NINGUNA":
+            st.caption(f"Alternativa: {r.instalacion_alternativa} · Volumen sugerido: {r.volumen_sugerido_bbl:,.0f} bbl")
+        st.markdown(r.accion_recomendada)
+        if not r.validacion_ok:
+            st.warning("La recomendación no pasó las validaciones automáticas (alternativa o volumen). Revísala antes de aprobar.")
+        with st.expander("Justificación y riesgo"):
+            st.markdown(f"{r.justificacion}\n\n**Si no se actúa:** {r.riesgo_si_no_se_actua}")
+        with st.form(key=f"decision_{r.fecha_corte}_{r.serie_id}"):
+            decision = st.radio("Decisión", DECISIONES, horizontal=True, key=f"d_{r.serie_id}")
+            accion_final = st.text_area("Acción final (edítala si eliges MODIFICADA)", value=r.accion_recomendada, key=f"a_{r.serie_id}")
+            comentario = st.text_input("Comentario", key=f"c_{r.serie_id}")
+            if st.form_submit_button("Registrar decisión"):
+                if decision == "MODIFICADA" and accion_final.strip() == r.accion_recomendada.strip():
+                    st.error("Para MODIFICADA edita el texto de la acción.")
+                    return
+                if decision == "RECHAZADA" and not comentario.strip():
+                    st.error("Indica en el comentario por qué se rechaza.")
+                    return
+                did = store.guardar_decision(
+                    r.fecha_corte, r.serie_id, decision, r.accion_recomendada,
+                    accion_final.strip() if decision != "RECHAZADA" else None,
+                    r.instalacion_alternativa, float(r.volumen_sugerido_bbl), comentario.strip() or None, usuario)
+                log.info("decision_id=%s serie=%s decision=%s usuario=%s", did, r.serie_id, decision, usuario)
+                st.success(f"Decisión {decision} registrada (id {did}).")
+                st.rerun()
+
+
+def vista_plan(store: ChatStore, usuario: str) -> None:
+    st.title("Plan de acción por alerta")
+    st.caption("Recomendaciones redactadas por IA generativa a partir de alertas y pronóstico, validadas en código. "
+               "La decisión final es de Logística y queda registrada en Lakebase.")
+    if st.button("Actualizar"):
+        plan.clear()
+    try:
+        df = plan()
+    except Exception as e:
+        log.exception("No se pudo leer el plan de acción")
+        st.error(f"No se pudo leer el plan de acción: {e}")
+        return
+    if df.empty:
+        st.info("No hay recomendaciones para la última fecha de corte.")
+        return
+    corte = df.fecha_corte.iloc[0]
+    vigentes = store.decisiones_vigentes(corte)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Recomendaciones", len(df))
+    c2.metric("Prioridad ALTA", int((df.prioridad == "ALTA").sum()))
+    c3.metric("Decididas", sum(s in vigentes for s in df.serie_id))
+    c4.metric("Pendientes", sum(s not in vigentes for s in df.serie_id))
+    st.caption(f"Corte {corte} · modelo {df.modelo_llm.iloc[0]} · generado {df.ts_generado.iloc[0][:16]} UTC")
+    for _, r in df.iterrows():
+        tarjeta_recomendacion(store, r, vigentes.get(r.serie_id), usuario)
+
+
 # ---------------------------------------------------------------- UI
 def main() -> None:
     try:
@@ -101,6 +170,15 @@ def main() -> None:
         st.stop()
     usuario = usuario_actual()
     st.session_state.setdefault("conversacion_id", None)
+
+    with st.sidebar:
+        vista = st.radio("Vista", ["Chat", "Plan de acción"], horizontal=True)
+        st.divider()
+    if vista == "Plan de acción":
+        with st.sidebar:
+            st.caption(f"Usuario: {usuario}")
+        vista_plan(store, usuario)
+        return
 
     with st.sidebar:
         st.header("Conversaciones")

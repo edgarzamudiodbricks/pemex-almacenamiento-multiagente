@@ -10,9 +10,9 @@ Demo de punta a punta sobre Databricks para analizar el producto almacenado (cru
 | --- | --- | --- |
 | `01_datos_sinteticos/` | Generador de catálogos y telemetría diaria por tanque (backfill e incremental, idempotente) | Notebook PySpark |
 | `02_pipeline_medallion/` | Pipeline Bronze -> Silver -> Gold con expectativas, cuarentena y Auto CDC | Lakeflow Spark Declarative Pipelines |
-| `03_ml/` | Modelo de pronóstico (LightGBM global, p10/p50/p90, horizonte 30 d) y actualización del endpoint | MLflow, Unity Catalog, Model Serving |
+| `03_ml/` | Modelo de pronóstico (LightGBM global, p10/p50/p90, horizonte 30 d), actualización del endpoint y plan de acción por alerta redactado por IA generativa | MLflow, Unity Catalog, Model Serving, AI Functions (`ai_query`) |
 | `04_lakebase/` | Proyecto Postgres para el historial del chat | Lakebase Autoscaling |
-| `05_app_chat/` | Chat que rutea preguntas de datos a Genie y escenarios what-if al modelo | Databricks Apps (Streamlit) |
+| `05_app_chat/` | Chat que rutea preguntas de datos a Genie y escenarios what-if al modelo, más la pestaña "Plan de acción" para aprobar, modificar o rechazar recomendaciones | Databricks Apps (Streamlit) |
 | `06_dashboard/` | Dashboard: estado actual, alertas y pronóstico, tendencia mensual | AI/BI Dashboards |
 | `07_genie/` | Instrucciones, tablas y SQL de ejemplo del Genie Agent | Genie |
 | `config/` | Definiciones del Job, el pipeline, el endpoint y los recursos de la App | JSON (REST API) |
@@ -40,7 +40,7 @@ No hay secretos en el repositorio: la App usa la identidad OAuth de su service p
 * `pemex_alm_bronze`: volume `landing` (CSV de catálogos y JSON de telemetría) y tablas crudas.
 * `pemex_alm_silver`: dimensiones, mantenimientos, telemetría depurada (Auto CDC SCD1), cuarentena y hecho diario por tanque sin huecos.
 * `pemex_alm_gold`: inventario diario por instalación-producto, snapshots actuales (instalación y tanque), resumen mensual y serie para pronóstico.
-* `pemex_alm_ml`: modelo `modelo_pronostico_capacidad`, `pronostico_capacidad_diario` y `alertas_capacidad`.
+* `pemex_alm_ml`: modelo `modelo_pronostico_capacidad`, `pronostico_capacidad_diario`, `alertas_capacidad` y `plan_accion_alertas` (acción recomendada por alerta, con el contexto enviado al LLM y el resultado de las validaciones).
 
 ## Inicio rápido
 

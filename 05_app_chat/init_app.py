@@ -13,6 +13,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.core import Config
 
 import escenario
+import plan_accion
 import servicio
 from storage import ChatStore
 
@@ -33,7 +34,17 @@ def main(smoke: bool) -> int:
                             (store.schema,)).fetchone()
     log.info("INIT_OK esquema=%s owner=%s current_user=%s", store.schema, fila["owner"], fila["usuario"])
 
-    if not smoke or os.getenv("RUN_SMOKE_TEST", "false").lower() != "true":
+    if not smoke:
+        return 0
+    # Chequeo de solo lectura en cada arranque: el SP puede leer el plan de acción y la tabla de decisiones.
+    try:
+        df_plan = plan_accion.cargar_plan(w)
+        corte = df_plan.fecha_corte.iloc[0] if not df_plan.empty else None
+        n_dec = len(store.decisiones_vigentes(corte)) if corte else 0
+        log.info("PLAN_OK filas=%s corte=%s decisiones_vigentes=%s", len(df_plan), corte, n_dec)
+    except Exception:
+        log.exception("PLAN_FAIL (revisar SELECT del SP sobre pemex_alm_ml.plan_accion_alertas)")
+    if os.getenv("RUN_SMOKE_TEST", "false").lower() != "true":
         return 0
     try:
         cat = escenario.cargar_catalogo(w)

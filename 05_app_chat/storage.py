@@ -90,6 +90,20 @@ class ChatStore:
                 creado_en TIMESTAMPTZ NOT NULL DEFAULT now())""").format(s, s),
             sql.SQL("CREATE INDEX IF NOT EXISTS ix_mensajes_conversacion ON {}.mensajes (conversacion_id, mensaje_id)").format(s),
             sql.SQL("CREATE INDEX IF NOT EXISTS ix_conversaciones_usuario ON {}.conversaciones (usuario, actualizado_en DESC)").format(s),
+            # Decisiones sobre el plan de acción (historial completo; la última por serie es la vigente)
+            sql.SQL("""CREATE TABLE IF NOT EXISTS {}.decisiones (
+                decision_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                fecha_corte DATE NOT NULL,
+                serie_id TEXT NOT NULL,
+                decision TEXT NOT NULL CHECK (decision IN ('APROBADA', 'RECHAZADA', 'MODIFICADA')),
+                accion_recomendada TEXT NOT NULL,
+                accion_final TEXT,
+                instalacion_alternativa TEXT,
+                volumen_sugerido_bbl DOUBLE PRECISION,
+                comentario TEXT,
+                usuario TEXT NOT NULL,
+                creado_en TIMESTAMPTZ NOT NULL DEFAULT now())""").format(s),
+            sql.SQL("CREATE INDEX IF NOT EXISTS ix_decisiones_serie ON {}.decisiones (fecha_corte, serie_id, decision_id DESC)").format(s),
         ]
         with self._pool.connection() as conn:
             # lock para que varias instancias de la app no compitan al crear el esquema
@@ -159,6 +173,29 @@ class ChatStore:
                 sql.SQL("SELECT * FROM {} WHERE conversacion_id = %s ORDER BY mensaje_id").format(self._t("mensajes")),
                 (conversacion_id,),
             ).fetchall()
+
+    def guardar_decision(self, fecha_corte: str, serie_id: str, decision: str, accion_recomendada: str,
+                         accion_final: Optional[str], instalacion_alternativa: Optional[str],
+                         volumen_sugerido_bbl: Optional[float], comentario: Optional[str], usuario: str) -> int:
+        with self._pool.connection() as conn:
+            fila = conn.execute(
+                sql.SQL("""INSERT INTO {} (fecha_corte, serie_id, decision, accion_recomendada, accion_final,
+                           instalacion_alternativa, volumen_sugerido_bbl, comentario, usuario)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING decision_id""").format(self._t("decisiones")),
+                (fecha_corte, serie_id, decision, accion_recomendada, accion_final, instalacion_alternativa,
+                 volumen_sugerido_bbl, comentario, usuario),
+            ).fetchone()
+        return int(fila["decision_id"])
+
+    def decisiones_vigentes(self, fecha_corte: str) -> dict[str, dict]:
+        """Última decisión por serie para una fecha de corte."""
+        with self._pool.connection() as conn:
+            filas = conn.execute(
+                sql.SQL("""SELECT DISTINCT ON (serie_id) serie_id, decision, accion_final, comentario, usuario, creado_en
+                           FROM {} WHERE fecha_corte = %s ORDER BY serie_id, decision_id DESC""").format(self._t("decisiones")),
+                (fecha_corte,),
+            ).fetchall()
+        return {f["serie_id"]: f for f in filas}
 
     def ultimo_escenario(self, conversacion_id: str) -> Optional[dict]:
         """Parametros del ultimo escenario de la conversacion (para preguntas de seguimiento)."""

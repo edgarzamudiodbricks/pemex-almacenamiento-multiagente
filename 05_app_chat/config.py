@@ -20,6 +20,7 @@ CATALOG = os.getenv("PEMEX_CATALOG", "<CATALOG>")
 TABLA_SERIES = f"{CATALOG}.pemex_alm_gold.serie_forecast_instalacion_producto"
 TABLA_PRONOSTICO = f"{CATALOG}.pemex_alm_ml.pronostico_capacidad_diario"
 TABLA_ALERTAS = f"{CATALOG}.pemex_alm_ml.alertas_capacidad"
+TABLA_PLAN = f"{CATALOG}.pemex_alm_ml.plan_accion_alertas"
 
 HORIZONTE_MAX_DIAS = 30
 MAX_FILAS_GUARDADAS = 200  # filas de resultados de Genie que se guardan en Lakebase
